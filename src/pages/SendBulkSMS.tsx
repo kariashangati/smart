@@ -65,7 +65,7 @@ export default function SendBulkSMS() {
                 </div>
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   Must contain a column named "phone", "Phone", "dest_addr" or "contact".
-                  Can also contain a "message" column if template is empty.
+                  You can use a "name" column to uniquely greet recipients.
                 </p>
               </div>
 
@@ -78,9 +78,13 @@ export default function SendBulkSMS() {
                     rows={4}
                     value={messageTemplate}
                     onChange={(e) => setMessageTemplate(e.target.value)}
+                    placeholder="Hello {NAME}, your code is..."
                     className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2 px-3 border"
                   />
                 </div>
+                <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                  Tip: Use <b>{'{NAME}'}</b> in the message template to replace it with the recipient's name from your csv file.
+                </p>
               </div>
 
               <button

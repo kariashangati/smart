@@ -94,9 +94,12 @@ router.get('/dashboard', authenticate, async (req, res) => {
   try {
     const db = getPool();
     let balance = 0;
+    let balanceError = null;
     try {
       balance = await checkBeemBalance();
-    } catch (e) {}
+    } catch (e: any) {
+      balanceError = e.response?.data?.message || e.message || 'Balance Check Failed';
+    }
 
     const [msgCount] = await db.query('SELECT status, COUNT(*) as count FROM messages GROUP BY status');
     const [campaignCount] = await db.query('SELECT COUNT(*) as count FROM campaigns');
@@ -108,6 +111,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
     }
     stats.campaigns = (campaignCount as any[])[0].count;
     stats.balance = balance;
+    stats.balanceError = balanceError;
 
     res.json(stats);
   } catch(err:any) {
@@ -156,8 +160,10 @@ router.post('/sms/bulk', authenticate, upload.single('file'), async (req, res) =
       for (const row of records) {
          // Try to find phone and message columns dynamically
          const phone = row.phone || row.Phone || row.dest_addr || row.contact;
-         const msg = messageTemplate || row.message || row.Message || row.text;
+         let msg = messageTemplate || row.message || row.Message || row.text;
+         const name = row.name || row.Name || row.first_name || row.NAME || '';
          if (phone && msg) {
+            msg = String(msg).replace(/{NAME}/g, String(name));
             const cost = calculateCost(msg);
             await db.query('INSERT INTO messages (campaign_id, dest_addr, message, cost, status) VALUES (?, ?, ?, ?, ?)', [campaignId, String(phone), String(msg), cost, 'QUEUED']);
          }

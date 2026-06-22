@@ -24,19 +24,29 @@ export const checkBeemBalance = async (): Promise<number> => {
 
   const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
 
-  const response = await axios.get(balanceUrl, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${auth}`,
-    },
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-  });
+  try {
+    const response = await axios.get(balanceUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${auth}`,
+      },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    });
 
-  if (response.data?.data?.credit_balance !== undefined) {
-    return response.data.data.credit_balance;
+    console.log('Balance response:', response.data);
+
+    if (response.data?.data?.credit_balance !== undefined) {
+      return parseFloat(response.data.data.credit_balance);
+    }
+    if (response.data?.credit_balance !== undefined) {
+      return parseFloat(response.data.credit_balance);
+    }
+    
+    throw new Error('Could not fetch balance from response: ' + JSON.stringify(response.data));
+  } catch (error: any) {
+    console.error('Balance API Error:', error.response?.data || error.message);
+    throw error;
   }
-  
-  throw new Error('Could not fetch balance');
 };
 
 const sendSmsBatch = async (messages: any[]) => {
